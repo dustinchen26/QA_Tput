@@ -25,17 +25,33 @@
             height: 150px;
             margin-bottom: 10px;
         }
+
         canvas {
             margin-bottom: 20px;
             width: 100% !important;  /* 保持寬度自適應 */
-			width: 800px;  /* 固定寬度 */
-			height: 300px; /* 固定高度 */
+            height: 300px; /* 固定高度 */
         }
+
         #chartsContainer {
-            width: 60%;
-            max-width: 1500px; /* 可以適當調整容器的最大寬度 */
+            width: 80%;
+            max-width: 1500px;
             margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap; /* 使圖表可以換行 */
+            justify-content: space-between; /* 使圖表均勻分佈 */
         }
+
+        .chartRow {
+            display: flex;
+            justify-content: space-between;
+            width: 100%; /* 讓每行的寬度為100% */
+            margin-bottom: 40px; /* 每一行圖表的底部間距 */
+        }
+
+        .chartItem {
+            width: 48%; /* 每個圖表佔據容器的48%，兩個圖表並排 */
+        }
+
         button {
             padding: 10px 20px;
             background-color: #4CAF50;
@@ -43,6 +59,7 @@
             border: none;
             cursor: pointer;
         }
+
         button:hover {
             background-color: #45a049;
         }
@@ -155,12 +172,23 @@
             // 清空原有圖表
             document.getElementById('chartsContainer').innerHTML = '';
 
-            // 為每個伺服器生成單獨的圖表
+            // 為每兩個伺服器生成一行圖表
+            let chartRow;
             parsedData.forEach((serverData, index) => {
+                // 如果是新的一行，創建一個 chartRow 容器
+                if (index % 2 === 0) {
+                    chartRow = document.createElement('div');
+                    chartRow.className = 'chartRow';
+                    document.getElementById('chartsContainer').appendChild(chartRow);
+                }
+
                 // 創建新的 canvas 元素
                 const canvas = document.createElement('canvas');
                 canvas.id = `chart${index + 1}`;
-                document.getElementById('chartsContainer').appendChild(canvas);
+                const chartItem = document.createElement('div');
+                chartItem.className = 'chartItem'; // 設置每個圖表的寬度為 48%
+                chartItem.appendChild(canvas);
+                chartRow.appendChild(chartItem);
 
                 // 設置圖表數據
                 new Chart(canvas, {
