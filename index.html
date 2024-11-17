@@ -19,19 +19,20 @@
             white-space: nowrap; /* Prevent automatic line breaks */
             overflow-x: auto; /* Enable horizontal scrollbar */
         }
-		
+        
         textarea {
-            width: 100%;
-            height: 200px;
+            width: 70%;
+            height: 150px;
             margin-bottom: 10px;
         }
         canvas {
             margin-bottom: 20px;
             width: 100% !important;  /* 保持寬度自適應 */
-            height: 500px !important; /* 調整畫布高度為500px */
+			width: 800px;  /* 固定寬度 */
+			height: 300px; /* 固定高度 */
         }
         #chartsContainer {
-            width: 80%;
+            width: 60%;
             max-width: 1500px; /* 可以適當調整容器的最大寬度 */
             margin: 0 auto;
         }
@@ -53,7 +54,7 @@
     <p style="margin: 0;">Author: Dustin_Chen, email: <a href="mailto:Dustin_Chen@compal.com"
             style="line-height: 1;">Dustin_Chen@compal.com</a> or <a href="mailto:chuhpsdustin@gmail.com"
             style="line-height: 1;">chuhpsdustin@gmail.com</a></p>
-		
+        
     <p>● Please paste the 5-great Report ex:"20241116-224559_B_UE1_temp.log" including iperf data and push draw</p>
     
     <textarea id="logInput"></textarea><br>
@@ -182,17 +183,17 @@
                                 title: { 
                                     display: true, 
                                     text: 'Time (sec)',
-                                    font: { size: 14 }  
+                                    font: { size: 20 }  // 增大X軸標題字體大小
                                 }
                             },
                             y: { 
                                 title: { 
                                     display: true, 
                                     text: 'Tput (Mbits/sec)', 
-                                    font: { size: 14 }  
+                                    font: { size: 18 }  // 增大Y軸標題字體大小
                                 },
                                 ticks: {
-                                    font: { size: 12 }  
+                                    font: { size: 18 }  // 增大Y軸刻度字體大小
                                 }
                             }
                         },
@@ -200,7 +201,7 @@
                             legend: {
                                 labels: {
                                     font: {
-                                        size: 14  
+                                        size: 20  // 增大圖例字體大小
                                     }
                                 }
                             }
