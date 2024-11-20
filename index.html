@@ -16,8 +16,8 @@
             line-height: 1.2;
             font-size: 14px;
             font-family: Roboto, sans-serif;
-            white-space: nowrap; /* Prevent automatic line breaks */
-            overflow-x: auto; /* Enable horizontal scrollbar */
+            white-space: nowrap;
+            overflow-x: auto;
         }
         
         textarea {
@@ -28,8 +28,8 @@
 
         canvas {
             margin-bottom: 20px;
-            width: 100% !important;  /* 保持寬度自適應 */
-            height: 300px; /* 固定高度 */
+            width: 100% !important;  
+            height: 300px; 
         }
 
         #chartsContainer {
@@ -37,19 +37,19 @@
             max-width: 1500px;
             margin: 0 auto;
             display: flex;
-            flex-wrap: wrap; /* 使圖表可以換行 */
-            justify-content: space-between; /* 使圖表均勻分佈 */
+            flex-wrap: wrap; 
+            justify-content: space-between; 
         }
 
         .chartRow {
             display: flex;
             justify-content: space-between;
-            width: 100%; /* 讓每行的寬度為100% */
-            margin-bottom: 40px; /* 每一行圖表的底部間距 */
+            width: 100%;
+            margin-bottom: 40px;
         }
 
         .chartItem {
-            width: 48%; /* 每個圖表佔據容器的48%，兩個圖表並排 */
+            width: 48%; 
         }
 
         button {
@@ -85,55 +85,52 @@
             const data = [];
             const lines = log.split('\n');
             let currentServerData = [];
-            let seenIntervals = new Set();  // 用來記錄當前伺服器處理的時間區間
-            let currentServerPort = null; // 用來保存伺服器端口號
-            let parsingData = false; // 標誌變量，判斷是否開始解析數據
+            let seenIntervals = new Set();
+            let currentServerPort = null;
+            let parsingData = false;
+            let currentTime = null;
 
             console.log('開始解析日誌數據...');
             lines.forEach((line, index) => {
                 console.log(`處理第 ${index + 1} 行: ${line}`);
 
-                // 檢查行是否包含「Client connecting to」，如果包含則跳過整段日誌
                 if (line.includes('Client connecting to')) {
                     console.log('發現 "Client connecting to"，跳過此段日誌');
-                    parsingData = false; // 停止解析
+                    parsingData = false;
                     return;
                 }
 
-                // 當遇到新的伺服器行
                 if (line.includes('Server listening on UDP port')) {
-                    // 如果當前伺服器已有數據，保存並開始處理新伺服器
                     if (currentServerData.length > 0) {
                         console.log(`保存伺服器數據，端口: ${currentServerPort}`);
-                        data.push({serverPort: currentServerPort, serverData: currentServerData});  // 保存當前伺服器的數據
+                        data.push({ serverPort: currentServerPort, serverData: currentServerData, time: currentTime });
                     }
-                    currentServerData = [];  // 清空當前伺服器的數據
-                    seenIntervals = new Set();  // 重置每個伺服器的時間區間集合
+                    currentServerData = [];
+                    seenIntervals = new Set();
 
-                    // 保存當前伺服器端口號
                     const portMatch = line.match(/Server listening on UDP port (\d+)/);
                     if (portMatch) {
-                        currentServerPort = portMatch[1]; // 保存端口號
+                        currentServerPort = portMatch[1];
                         console.log(`發現伺服器開放在端口: ${currentServerPort}`);
                     }
-                    parsingData = true; // 開始解析數據
-                    return; // 跳過這行
+
+                    parsingData = true;
+
+                    // 提取時間 (在這裡開始尋找與該伺服器相關的時間)
+                    currentTime = findLastTime(lines, index);
+                    console.log(`發現時間: ${currentTime}`);
+                    return;
                 }
 
-                // 只有在解析數據標誌為真時才解析
                 if (parsingData) {
-                    // 匹配時間區間和吞吐量數據
                     const match = line.match(regex);
                     if (match) {
-                        const interval = match[1];  // 取得時間區間
-                        let tput = parseFloat(match[2]); // 取得吞吐量數據
+                        const interval = match[1];
+                        let tput = parseFloat(match[2]);
 
-                        // 轉換單位為 Mbits/sec，這樣統一單位
-                        tput = tput; // 單位已經是 Mbits/sec，無需進行單位轉換
+                        tput = tput;
 
-                        // 不再跳過相同時間區間，對每個伺服器分開處理
-                        console.log('匹配成功:', match);
-                        seenIntervals.add(interval);  // 記錄這個時間區間
+                        seenIntervals.add(interval);
                         currentServerData.push({
                             interval: interval,
                             tput: tput
@@ -144,14 +141,25 @@
                 }
             });
 
-            // 保存最後一個伺服器的數據
             if (currentServerData.length > 0) {
                 console.log(`保存最後一個伺服器的數據，端口: ${currentServerPort}`);
-                data.push({serverPort: currentServerPort, serverData: currentServerData});
+                data.push({ serverPort: currentServerPort, serverData: currentServerData, time: currentTime });
             }
 
             console.log('解析完成，提取的數據:', data);
             return data;
+        }
+
+        function findLastTime(lines, index) {
+            const timeRegex = /(\d{4}\/\d{2}\/\d{2} \S+ \d{2}:\d{2}:\d{2})/;
+            for (let i = index - 1; i >= 0; i--) {
+                const line = lines[i];
+                const match = line.match(timeRegex);
+                if (match) {
+                    return match[1];
+                }
+            }
+            return null;
         }
 
         function generateChart() {
@@ -161,7 +169,6 @@
                 return;
             }
 
-            // 解析日誌數據
             const parsedData = parseLog(log);
 
             if (parsedData.length === 0) {
@@ -169,35 +176,30 @@
                 return;
             }
 
-            // 清空原有圖表
             document.getElementById('chartsContainer').innerHTML = '';
 
-            // 為每兩個伺服器生成一行圖表
             let chartRow;
             parsedData.forEach((serverData, index) => {
-                // 如果是新的一行，創建一個 chartRow 容器
                 if (index % 2 === 0) {
                     chartRow = document.createElement('div');
                     chartRow.className = 'chartRow';
                     document.getElementById('chartsContainer').appendChild(chartRow);
                 }
 
-                // 創建新的 canvas 元素
                 const canvas = document.createElement('canvas');
                 canvas.id = `chart${index + 1}`;
                 const chartItem = document.createElement('div');
-                chartItem.className = 'chartItem'; // 設置每個圖表的寬度為 48%
+                chartItem.className = 'chartItem';
                 chartItem.appendChild(canvas);
                 chartRow.appendChild(chartItem);
 
-                // 設置圖表數據
                 new Chart(canvas, {
                     type: 'line',
                     data: {
-                        labels: serverData.serverData.map(d => d.interval),  // X軸為時間區間
+                        labels: serverData.serverData.map(d => d.interval),
                         datasets: [{
                             label: `Tput (Mbits/sec) - Port ${serverData.serverPort}`,
-                            data: serverData.serverData.map(d => d.tput),  // Y軸為吞吐量數據
+                            data: serverData.serverData.map(d => d.tput),
                             borderColor: 'rgb(75, 192, 192)',
                             fill: false,
                             tension: 0.1
@@ -211,25 +213,33 @@
                                 title: { 
                                     display: true, 
                                     text: 'Time (sec)',
-                                    font: { size: 20 }  // 增大X軸標題字體大小
+                                    font: { size: 20 }
                                 }
                             },
                             y: { 
                                 title: { 
                                     display: true, 
                                     text: 'Tput (Mbits/sec)', 
-                                    font: { size: 18 }  // 增大Y軸標題字體大小
+                                    font: { size: 18 }
                                 },
                                 ticks: {
-                                    font: { size: 18 }  // 增大Y軸刻度字體大小
+                                    font: { size: 18 }
                                 }
                             }
                         },
                         plugins: {
+                            title: {
+                                display: true,
+                                text: `Time: ${serverData.time}`,  // 顯示時間在標題
+                                font: {
+                                    size: 18,
+                                    weight: 'bold'
+                                }
+                            },
                             legend: {
                                 labels: {
                                     font: {
-                                        size: 20  // 增大圖例字體大小
+                                        size: 20
                                     }
                                 }
                             }
