@@ -170,7 +170,7 @@ UDP buffer size:  208 KByte (default)
         }
 
         function findLastTime(lines, index) {
-            const timeRegex = /(\d{4}\/\d{2}\/\d{2} \S+ \d{2}:\d{2}:\d{2})/;
+            const timeRegex = /(\d{4}\/\d{1,2}\/\d{1,2} \S+ \d{2}:\d{2}:\d{2})/;
             for (let i = index - 1; i >= 0; i--) {
                 const line = lines[i];
                 const match = line.match(timeRegex);
